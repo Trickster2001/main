@@ -1,0 +1,98 @@
+from skimage.io import imread
+import numpy as np
+from skimage.color import rgb2gray
+import matplotlib.pylab as pylab
+from skimage.morphology import binary_erosion,rectangle
+
+def plot_image (image,title=''):
+    pylab.title(title,size=20),pylab.imshow(image)
+    pylab.axis('off')
+
+im=rgb2gray(imread('clock2.jpg'))
+im[im<=0.5]=0
+#createbinaryimagewithfixedthreshold0.5
+im[im>0.5]=1
+pylab.gray()
+pylab.figure(figsize=(20,10))
+pylab.subplot(1,3,1),plot_image(im,'original')
+im1=binary_erosion(im,rectangle(1,5))
+pylab.subplot(1,3,2),plot_image(im1,'erosionwithrectanglesize(1,5)')
+im1=binary_erosion(im,rectangle(1,15))
+pylab.subplot(1,3,3),plot_image(im1,'erosionwithrectanglesize(1,15)')
+pylab.show()
+
+from skimage.morphology import binary_dilation,disk
+from skimage import img_as_float
+im = img_as_float(imread('tagore.png'))
+im=1-im[...,3]
+im[im<=0.5]=0
+im[im>0.5]=1
+pylab.gray()
+pylab.figure(figsize=(18,9))
+pylab.subplot(131)
+pylab.imshow(im)
+pylab.title('original',size=20)
+pylab.axis('off')
+for d in range(1,3):
+    pylab.subplot(1,3,d+1)
+    im1=binary_dilation(im,disk(2*d))
+    pylab.imshow(im1)
+    pylab.title('dilationwithdisksize'+str(2*d),size=20)
+    pylab.axis('off')
+    
+pylab.show()
+
+from skimage.morphology import binary_opening,binary_closing,binary_erosion,binary_dilation,disk
+im=rgb2gray(imread('circles.jpg'))
+im[im<=0.5]=0
+im[im>0.5]=1
+pylab.gray()
+pylab.figure(figsize=(20,10))
+pylab.subplot(1,3,1),plot_image(im,'original')
+im1=binary_opening(im,disk(12))
+pylab.subplot(1,3,2),plot_image(im1,'openingwithdisksize'+str(12))
+im1=binary_closing(im,disk(6))
+pylab.subplot(1,3,3),plot_image(im1,'closingwithdisksize'+str(6))
+pylab.show()
+
+#Skeletonizing
+def plot_images_horizontally(original,filtered,filter_name,sz=(18,7)):
+    pylab.gray()
+    pylab.figure(figsize=sz)
+    pylab.subplot(1,2,1),plot_image(original,'original')
+    pylab.subplot(1,2,2),plot_image(filtered,filter_name)
+    pylab.show()
+
+from skimage.morphology import skeletonize
+im=img_as_float(imread('dynasaur.png')[...,3])
+threshold=0.5
+im[im<=threshold]=0
+im[im>threshold]=1
+skeleton=skeletonize(im)
+plot_images_horizontally(im,skeleton,'skeleton',sz=(18,9))
+
+from skimage.morphology import convex_hull_image
+im=rgb2gray(imread('horse-dog.jpg'))
+threshold=0.5
+im[im<threshold]=0
+#converttobinaryimage
+im[im>=threshold]=1
+chull=convex_hull_image(im)
+plot_images_horizontally(im,chull,'convexhull',sz=(18,9))
+
+#Removingsmallobjects
+from skimage.morphology import remove_small_objects
+im=rgb2gray(imread('circles.jpg'))
+im[im>0.5]=1
+#createbinaryimagebythresholdingwithfixedthreshold0.5
+im[im<=0.5]=0
+im=im.astype(np.bool)
+pylab.figure(figsize=(15,15))
+pylab.subplot(2,2,1),plot_image(im,'original')
+i=2
+for osz in [50,200,500]:
+    im1=remove_small_objects(im,osz,connectivity=1)
+    pylab.subplot(2,2,i),plot_image(im1,'removingsmallobjectsbelowsize'+str(osz))
+    i+=1
+
+pylab.show()

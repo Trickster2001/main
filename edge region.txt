@@ -1,0 +1,40 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage.feature import canny
+from skimage import data,morphology
+from skimage.color import rgb2gray
+import scipy.ndimage as nd
+
+plt.rcParams["figure.figsize"] = (12,8)
+
+rocket = data.rocket()
+rocket_wh = rgb2gray(rocket)
+
+edges = canny(rocket_wh)
+plt.imshow(edges, interpolation='gaussian')
+plt.title('Canny detector')
+
+fill_im = nd.binary_fill_holes(edges)
+plt.imshow(fill_im)
+plt.title('Region Filling')
+
+from scipy import ndimage, misc
+elevation_map = ndimage.sobel(rocket_wh)
+plt.imshow(elevation_map)
+
+markers = np.zeros_like(rocket_wh)
+markers[rocket_wh < 0.1171875] = 1 # 30/255
+markers[rocket_wh > 0.5859375] = 2 # 150/255
+
+plt.imshow(markers)
+plt.title('markers')
+
+segmentation = morphology.watershed(elevation_map, markers)
+
+plt.imshow(segmentation)
+plt.title('Watershed segmentation')
+
+segmentation = nd.binary_fill_holes(segmentation - 1)
+label_rock, _ = nd.label(segmentation)
+# overlay image with different labels
+image_label_overlay = color.label2rgb(label_rock, image=rocket_wh)
